@@ -82,11 +82,13 @@ class DBAdapter:
         try:
             cur = conn.cursor()
             total = cur.execute("SELECT COUNT(*) FROM conversation_summaries").fetchone()[0]
-            top_level = cur.execute("SELECT COUNT(*) FROM conversation_summaries WHERE parent_conversation_id = ''").fetchone()[0]
+            top_query = "SELECT COUNT(*) FROM conversation_summaries WHERE parent_conversation_id = ''"
+            top_level = cur.execute(top_query).fetchone()[0]
             subagents = total - top_level
 
             # 检查顶层会话命名合规度
-            rows = cur.execute("SELECT conversation_id, title FROM conversation_summaries WHERE parent_conversation_id = ''").fetchall()
+            rows_query = "SELECT conversation_id, title FROM conversation_summaries WHERE parent_conversation_id = ''"
+            rows = cur.execute(rows_query).fetchall()
             formatted_count = 0
             empty_count = 0
             unformatted_count = 0

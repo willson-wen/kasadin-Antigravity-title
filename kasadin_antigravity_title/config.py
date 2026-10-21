@@ -10,7 +10,8 @@ DEFAULT_ANTIGRAVITY_DIR = Path(os.path.expanduser("~/.gemini/antigravity"))
 
 class Config:
     def __init__(self, antigravity_dir: Path = None):
-        self.antigravity_dir = Path(antigravity_dir or os.environ.get("ANTIGRAVITY_DATA_DIR") or DEFAULT_ANTIGRAVITY_DIR)
+        target = antigravity_dir or os.environ.get("ANTIGRAVITY_DATA_DIR") or DEFAULT_ANTIGRAVITY_DIR
+        self.antigravity_dir = Path(target)
         self.db_path = self.antigravity_dir / "conversation_summaries.db"
         self.brain_dir = self.antigravity_dir / "brain"
         self.backup_dir = self.antigravity_dir / "backups" / "kasadin-title"

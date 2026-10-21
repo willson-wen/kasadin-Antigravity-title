@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
+  <title id="title">Antigravity 会话实时命名，清晰区分</title>
+  <desc id="desc">会话标题对比：模糊标题转换为「emoji 具体对象｜核心目标」，原生 Antigravity Skill，零依赖本地快照。</desc>
+  <rect width="1200" height="440" rx="22" fill="#F5F6F1"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Hiragino Sans GB,sans-serif">
+    <!-- Header row -->
+    <text x="44" y="44" font-size="20" font-weight="700" fill="#586C60" letter-spacing="0.5">kasadin-Antigravity-title</text>
+    <g transform="translate(930, 24)">
+      <rect width="226" height="34" rx="17" fill="#E1EBE2"/>
+      <circle cx="18" cy="17" r="4.5" fill="#2E754C"/>
+      <text x="32" y="23" font-size="16" font-weight="600" fill="#295E40">Native Antigravity Skill</text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="42" y="104" font-size="46" font-weight="800" letter-spacing="-1" fill="#143323">
+      Antigravity 会话智能命名，<tspan fill="#2E754C">清晰区分。</tspan>
+    </text>
+    <text x="44" y="142" font-size="20" fill="#5A6F62">
+      类别 emoji + 具体对象｜核心目标，侧边栏会话从此一目了然。
+    </text>
+
+    <!-- Card Left: Before -->
+    <g id="before" transform="translate(44, 172)">
+      <rect width="364" height="226" rx="16" fill="#E8E9E2"/>
+      <text x="24" y="34" font-size="18" font-weight="700" fill="#758277">整理前的会话标题</text>
+      <path d="M24 48h316" stroke="#D2D6CB" stroke-width="1.5"/>
+      <g fill="#7A877E" font-size="21" font-weight="500">
+        <text x="24" y="92">Antigravity 項目对话命名</text>
+        <text x="24" y="148">Seedance 2.0 创意选题与脚本规划</text>
+        <text x="24" y="204">有bug</text>
+      </g>
+    </g>
+
+    <!-- Transition Arrows -->
+    <g id="arrows" fill="none" stroke="#689E7B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M434 264h42m-9-8 9 8-9 8"/>
+      <path d="M434 320h42m-9-8 9 8-9 8"/>
+      <path d="M434 376h42m-9-8 9 8-9 8"/>
+    </g>
+
+    <!-- Card Right: After -->
+    <g id="after" transform="translate(502, 172)">
+      <rect width="654" height="226" rx="16" fill="#FFFFFF" stroke="#D1E0D4" stroke-width="1.5"/>
+      <text x="26" y="34" font-size="18" font-weight="700" fill="#2E754C">规范后的高辨识度标题</text>
+      <path d="M26 48h602" stroke="#E3ECE4" stroke-width="1.5"/>
+      <g font-size="21" font-weight="600">
+        <!-- Item 1 -->
+        <g transform="translate(26, 73)">
+          <rect width="602" height="42" rx="10" fill="#F4F8F4"/>
+          <text x="14" y="28" fill="#1C402B">
+            <tspan fill="#3E7B54">🧩</tspan> kasadin-Antigravity-title<tspan fill="#648A71">｜</tspan>对话命名系统开发与部署
+          </text>
+        </g>
+        <!-- Item 2 -->
+        <g transform="translate(26, 129)">
+          <rect width="602" height="42" rx="10" fill="#F4F8F4"/>
+          <text x="14" y="28" fill="#1C402B">
+            <tspan fill="#3E7B54">🎬</tspan> Seedance 2.0<tspan fill="#648A71">｜</tspan>创作者创意选题与脚本规划
+          </text>
+        </g>
+        <!-- Item 3 -->
+        <g transform="translate(26, 185)">
+          <rect width="602" height="42" rx="10" fill="#F4F8F4"/>
+          <text x="14" y="28" fill="#1C402B">
+            <tspan fill="#3E7B54">⚙️</tspan> MCP服务<tspan fill="#648A71">｜</tspan>连接配置与报错排查
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
