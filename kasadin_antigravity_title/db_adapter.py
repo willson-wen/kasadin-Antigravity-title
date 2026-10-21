@@ -170,10 +170,10 @@ class DBAdapter:
             if not exists:
                 return False, f"未找到会话 ID: {conversation_id}"
 
-            # 2. 更新主表
+            # 2. 更新主表 (同时维护 title 和 preview)
             cur.execute(
-                "UPDATE conversation_summaries SET title = ? WHERE conversation_id = ?",
-                (new_title, conversation_id)
+                "UPDATE conversation_summaries SET title = ?, preview = ? WHERE conversation_id = ?",
+                (new_title, new_title, conversation_id)
             )
 
             # 3. 更新全文检索索引表（保持搜索一致）
