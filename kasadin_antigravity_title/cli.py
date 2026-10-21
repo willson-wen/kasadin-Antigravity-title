@@ -304,7 +304,7 @@ def main():
 
     cfg = Config()
     cfg.ensure_dirs()
-    db = DBAdapter(cfg.db_path, cfg.backup_dir)
+    db = DBAdapter(cfg.db_path, cfg.backup_dir, cfg.annotations_dir)
 
     cmd_map = {
         "doctor": cmd_doctor,

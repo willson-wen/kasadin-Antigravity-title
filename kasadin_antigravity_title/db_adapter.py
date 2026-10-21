@@ -1,9 +1,10 @@
 """
 kasadin-Antigravity-title SQLite 数据库适配器
-提供 conversation_summaries.db 的安全读取、原子备份、恢复以及标题同步更新（含 FTS 索引维护）
+提供 conversation_summaries.db 的安全读取、原子备份、恢复以及标题同步更新（含 FTS 索引与 annotations 双向维护）
 """
 
 import os
+import re
 import shutil
 import sqlite3
 import time
@@ -15,9 +16,10 @@ from .validator import validate_title
 
 
 class DBAdapter:
-    def __init__(self, db_path: Path, backup_dir: Path):
+    def __init__(self, db_path: Path, backup_dir: Path, annotations_dir: Optional[Path] = None):
         self.db_path = Path(db_path)
         self.backup_dir = Path(backup_dir)
+        self.annotations_dir = Path(annotations_dir or self.db_path.parent / "annotations")
 
     def _get_connection(self) -> sqlite3.Connection:
         if not self.db_path.exists():
@@ -28,7 +30,7 @@ class DBAdapter:
 
     def create_backup(self, tag: str = "auto") -> Path:
         """
-        利用 SQLite 官方在线备份接口创建 ACID 一致性快照
+        利用 SQLite 官方在线备份接口创建 ACID 一致性快照，并备份 annotations 文件夹
         """
         self.backup_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -44,6 +46,14 @@ class DBAdapter:
         finally:
             source_conn.close()
 
+        # 备份对应的 annotations 目录
+        if self.annotations_dir.exists():
+            annotations_backup = self.backup_dir / f"annotations_{timestamp}_{tag}"
+            try:
+                shutil.copytree(str(self.annotations_dir), str(annotations_backup), dirs_exist_ok=True)
+            except Exception:
+                pass
+
         return backup_file
 
     def list_backups(self) -> List[Path]:
@@ -55,7 +65,7 @@ class DBAdapter:
         return backups
 
     def restore_backup(self, backup_file: Path) -> bool:
-        """从备份文件恢复数据库"""
+        """从备份文件恢复数据库及对应的 annotations"""
         backup_file = Path(backup_file)
         if not backup_file.exists():
             raise FileNotFoundError(f"备份文件不存在：{backup_file}")
@@ -74,6 +84,15 @@ class DBAdapter:
         finally:
             dest_conn.close()
 
+        # 恢复匹配的 annotations
+        base_name = backup_file.stem.replace("conversation_summaries_", "annotations_")
+        matched_annotations = self.backup_dir / base_name
+        if matched_annotations.exists():
+            try:
+                shutil.copytree(str(matched_annotations), str(self.annotations_dir), dirs_exist_ok=True)
+            except Exception:
+                pass
+
         return True
 
     def get_stats(self) -> Dict[str, Any]:
@@ -87,7 +106,9 @@ class DBAdapter:
             subagents = total - top_level
 
             # 检查顶层会话命名合规度
-            rows_query = "SELECT conversation_id, title FROM conversation_summaries WHERE parent_conversation_id = ''"
+            rows_query = (
+                "SELECT conversation_id, title FROM conversation_summaries WHERE parent_conversation_id = ''"
+            )
             rows = cur.execute(rows_query).fetchall()
             formatted_count = 0
             empty_count = 0
@@ -132,7 +153,6 @@ class DBAdapter:
 
             results = []
             for r in rows:
-                # 尝试从 conversations_fts 中提取 user_body 补全
                 cid = r["conversation_id"]
                 fts_row = cur.execute(
                     "SELECT user_body FROM conversations_fts WHERE conversation_id = ? LIMIT 1",
@@ -152,9 +172,28 @@ class DBAdapter:
         finally:
             conn.close()
 
+    def _sync_annotation_file(self, conversation_id: str, new_title: str) -> None:
+        """更新 Antigravity 侧边栏实际读取的 annotations/<conv_id>.pbtxt 文件"""
+        try:
+            self.annotations_dir.mkdir(parents=True, exist_ok=True)
+            pbtxt_file = self.annotations_dir / f"{conversation_id}.pbtxt"
+            escaped = new_title.replace('"', '\\"')
+
+            if pbtxt_file.exists():
+                content = pbtxt_file.read_text(encoding="utf-8")
+                if "title:" in content:
+                    updated = re.sub(r'title:\".*?\"', f'title:"{escaped}"', content)
+                else:
+                    updated = f'title:"{escaped}" ' + content
+                pbtxt_file.write_text(updated, encoding="utf-8")
+            else:
+                pbtxt_file.write_text(f'title:"{escaped}"\n', encoding="utf-8")
+        except Exception:
+            pass
+
     def update_conversation_title(self, conversation_id: str, new_title: str) -> Tuple[bool, str]:
         """
-        更新会话标题：同时维护 conversation_summaries 与 conversations_fts 索引
+        更新会话标题：同时维护 conversation_summaries、conversations_fts 以及 annotations/*.pbtxt
         """
         is_valid, reason = validate_title(new_title)
         if not is_valid:
@@ -188,6 +227,10 @@ class DBAdapter:
                 pass  # 如果 FTS 表不存在某些记录不阻断主更新
 
             conn.commit()
+
+            # 4. 同步更新 Antigravity UI 直接读取渲染的 annotations 实体文件
+            self._sync_annotation_file(conversation_id, new_title)
+
             return True, "更新成功"
         except Exception as e:
             conn.rollback()

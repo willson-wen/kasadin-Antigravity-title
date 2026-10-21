@@ -14,6 +14,7 @@ class Config:
         self.antigravity_dir = Path(target)
         self.db_path = self.antigravity_dir / "conversation_summaries.db"
         self.brain_dir = self.antigravity_dir / "brain"
+        self.annotations_dir = self.antigravity_dir / "annotations"
         self.backup_dir = self.antigravity_dir / "backups" / "kasadin-title"
         self.skills_dir = self.antigravity_dir / "skills"
 
