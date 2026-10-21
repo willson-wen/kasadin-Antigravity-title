@@ -106,14 +106,25 @@ python3 scripts/run.py restore
 
 ---
 
-## 🧩 Antigravity 原生 Skill 集成
+## 🧩 Antigravity 原生 Skill 集成与首次安装引导
 
-本项目已内置标准的 Antigravity Skill（位于 `skills/kasadin-antigravity-title/SKILL.md`），并已软链接至 `~/.gemini/antigravity/skills/kasadin-antigravity-title`。
+本项目内置标准的 Antigravity Skill（位于 `skills/kasadin-antigravity-title/SKILL.md`），并已全局软链接至 `~/.gemini/antigravity/skills/kasadin-antigravity-title`。
 
-在 Antigravity 任意对话中，你只需直接对 Agent 说：
+### 🌟 贴心的首次安装主动引导
+当用户在 Antigravity 中安装本 Skill 或首次与之交互时，Agent 会自动检查当前会话的规范覆盖率。如果发现有历史对话尚未规范化，会主动礼貌询问：
+
+> “检测到你当前 Antigravity 侧边栏中有若干历史会话尚未采用结构化命名。
+> **需不需要我帮你扫描并批量格式化整理你 Antigravity 过去所有的历史对话？**
+> 💡 *整理前会自动为数据库创建时间戳安全快照，随时支持一键完整还原。*”
+
+用户确认后，Agent 即可先提供预览或一键全量整理！
+
+### 💬 日常对话指令示例
+在 Antigravity 任意对话中，你也可以直接对 Agent 说：
 - *“帮我用 kasadin-title 检查一下会话命名覆盖率”*
 - *“预览并整理我过去的未命名会话”*
 - *“把当前对话按照规范重命名”*
+- *“一键批量整理我所有历史对话”*
 
 ---
 
