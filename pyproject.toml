@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kasadin-antigravity-title"
+version = "0.1.0"
+description = "Antigravity 会话智能规范化命名系统"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name = "kasadin" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+[project.scripts]
+kasadin-title = "kasadin_antigravity_title.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kasadin_antigravity_title*"]
