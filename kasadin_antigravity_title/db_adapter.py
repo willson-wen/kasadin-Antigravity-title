@@ -20,6 +20,8 @@ class DBAdapter:
         self.db_path = Path(db_path)
         self.backup_dir = Path(backup_dir)
         self.annotations_dir = Path(annotations_dir or self.db_path.parent / "annotations")
+        self._ls_info: Optional[Dict[str, Any]] = None
+        self._ls_detected = False
 
     def _get_connection(self) -> sqlite3.Connection:
         if not self.db_path.exists():
@@ -191,9 +193,76 @@ class DBAdapter:
         except Exception:
             pass
 
+    def _get_language_server_info(self) -> Optional[Dict[str, Any]]:
+        """检测当前正在运行的 Antigravity language_server 连接信息（含 CSRF Token 与 HTTPS 端口）"""
+        if self._ls_detected:
+            return self._ls_info
+
+        self._ls_detected = True
+        try:
+            import subprocess
+            out = subprocess.check_output(["ps", "-ax", "-o", "pid,command"]).decode("utf-8")
+            for line in out.splitlines():
+                if "language_server" in line and "--csrf_token" in line:
+                    m_pid = re.match(r"\s*(\d+)", line)
+                    pid = m_pid.group(1) if m_pid else None
+                    m_csrf = re.search(r"--csrf_token\s+([a-f0-9\-]+)", line)
+                    csrf = m_csrf.group(1) if m_csrf else None
+                    if pid and csrf:
+                        lsof = subprocess.check_output(
+                            ["lsof", "-nP", "-a", "-p", pid, "-iTCP", "-sTCP:LISTEN"],
+                            stderr=subprocess.DEVNULL
+                        ).decode("utf-8")
+                        ports = re.findall(r":(\d+)\s+\(LISTEN\)", lsof)
+                        if ports:
+                            self._ls_info = {"pid": pid, "csrf": csrf, "port": int(ports[0])}
+                            return self._ls_info
+        except Exception:
+            pass
+        return None
+
+    def _notify_language_server(self, conversation_id: str, new_title: str) -> bool:
+        """
+        通过 Antigravity 本地 language_server ConnectRPC 接口实时更新会话内存态，
+        实现无需重启即可让应用层及后台状态即时同步
+        """
+        info = self._get_language_server_info()
+        if not info:
+            return False
+
+        try:
+            import urllib.request
+            import ssl
+            import json
+
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
+            payload = json.dumps({
+                "cascadeIds": [conversation_id],
+                "annotations": {"title": new_title},
+                "mergeAnnotations": True
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                f"https://127.0.0.1:{info['port']}/exa.language_server_pb.LanguageServerService/UpdateConversationAnnotations",
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-codeium-csrf-token": info["csrf"],
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, context=ctx, timeout=3.0) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
+
     def update_conversation_title(self, conversation_id: str, new_title: str) -> Tuple[bool, str]:
         """
-        更新会话标题：同时维护 conversation_summaries、conversations_fts 以及 annotations/*.pbtxt
+        更新会话标题：同时维护 conversation_summaries、conversations_fts、annotations/*.pbtxt
+        并通知运行中的 language_server 实时热同步
         """
         is_valid, reason = validate_title(new_title)
         if not is_valid:
@@ -230,6 +299,9 @@ class DBAdapter:
 
             # 4. 同步更新 Antigravity UI 直接读取渲染的 annotations 实体文件
             self._sync_annotation_file(conversation_id, new_title)
+
+            # 5. 向运行中的 Antigravity language_server 推送实时热同步
+            self._notify_language_server(conversation_id, new_title)
 
             return True, "更新成功"
         except Exception as e:
